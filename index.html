@@ -53,14 +53,13 @@
   </select>
 
   <label>Start Time:</label>
-  <input type="time" id="start">
+  <input type="time" id="start" onchange="autoRun()">
 
   <label>End Time:</label>
-  <input type="time" id="end">
+  <input type="time" id="end" onchange="autoRun()">
 
   <div id="runner">Time Remaining: 0m</div>
 
-  <button class="btn" onclick="startRun()">Start Run</button>
   <button class="btn" onclick="addEntry()">Add Entry</button>
   <button class="btn btn-clear" onclick="clearLog()">Clear Log</button>
 
@@ -84,7 +83,7 @@
   <script>
     let timerInterval;
     let runStart;
-    let runEstimateMins = 0; // computed from start-end
+    let runEstimateMins = 0;
     let deliveryLog = [];
 
     window.onload = function() {
@@ -97,24 +96,21 @@
     };
 
     function parseTimeToDate(t) {
-      // t is "HH:MM" (24h) or "HH:MM" from input; safe ISO stub
+      // Converts "HH:MM" into a Date anchored at 1970-01-01
       return new Date('1970-01-01T' + t + ':00');
     }
 
-    function startRun() {
+    function autoRun() {
       clearInterval(timerInterval);
       const start = document.getElementById('start').value;
       const end = document.getElementById('end').value;
-      if (!start || !end) {
-        alert('Enter Start and End times before starting the run.');
-        return;
-      }
+      if (!start || !end) return;
 
       const startTime = parseTimeToDate(start);
       const endTime = parseTimeToDate(end);
       const diffMs = endTime - startTime;
       if (diffMs <= 0) {
-        alert('End Time must be after Start Time.');
+        document.getElementById('runner').textContent = 'Invalid time range';
         return;
       }
 
@@ -125,10 +121,9 @@
         const now = new Date();
         const diffMins = Math.floor((now - runStart) / 60000);
         const remaining = runEstimateMins - diffMins;
-        const runner = document.getElementById('runner');
-        runner.textContent = remaining >= 0
-          ? 'Time Remaining: ' + remaining + 'm'
-          : 'Over Time: ' + Math.abs(remaining) + 'm';
+        document.getElementById('runner').textContent =
+          remaining >= 0 ? 'Time Remaining: ' + remaining + 'm'
+                         : 'Over Time: ' + Math.abs(remaining) + 'm';
       }, 1000);
     }
 
@@ -165,6 +160,7 @@
       renderRow(entry);
       updateTotals();
 
+      // Reset fields (keep Name/Date to ease multiple entries)
       document.getElementById('place').value = '';
       document.getElementById('mode').value = '';
       document.getElementById('start').value = '';
