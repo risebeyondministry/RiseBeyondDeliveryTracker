@@ -5,71 +5,19 @@
   <title>RiseBeyond Delivery Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: white;
-    }
-    h2 {
-      color: #0077cc;
-      text-align: center;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-      color: #444;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-    table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background: #f4f4f4;
-      color: #0077cc;
-    }
-    .btn {
-      background: #FFD700;
-      color: #2c3e50;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    .btn:hover {
-      background: #e6c200;
-    }
-    .btn-clear {
-      background: #888;
-      color: white;
-    }
-    .btn-clear:hover {
-      background: #555;
-    }
-    #runner {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #0077cc;
-      text-align: center;
-      font-size: 18px;
-    }
-    #totalRow {
-      font-weight: bold;
-      background: #f9f9f9;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; background: white; }
+    h2 { color: #0077cc; text-align: center; }
+    label { display: block; margin-top: 10px; font-weight: bold; color: #444; }
+    input, select, button { width: 100%; padding: 10px; margin-top: 5px; font-size: 16px; box-sizing: border-box; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f4f4f4; color: #0077cc; }
+    .btn { background: #FFD700; color: #2c3e50; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    .btn:hover { background: #e6c200; }
+    .btn-clear { background: #888; color: white; }
+    .btn-clear:hover { background: #555; }
+    #runner { margin-top: 15px; font-weight: bold; color: #0077cc; text-align: center; font-size: 18px; }
+    #totalRow { font-weight: bold; background: #f9f9f9; }
   </style>
 </head>
 <body>
@@ -110,9 +58,6 @@
   <label>End Time:</label>
   <input type="time" id="end">
 
-  <label>Estimated Time (minutes):</label>
-  <input type="number" id="estimate" placeholder="e.g. 20">
-
   <div id="runner">Time Remaining: 0m</div>
 
   <button class="btn" onclick="startRun()">Start Run</button>
@@ -139,6 +84,7 @@
   <script>
     let timerInterval;
     let runStart;
+    let runEstimateMins = 0; // computed from start-end
     let deliveryLog = [];
 
     window.onload = function() {
@@ -150,19 +96,35 @@
       }
     };
 
+    function parseTimeToDate(t) {
+      // t is "HH:MM" (24h) or "HH:MM" from input; safe ISO stub
+      return new Date('1970-01-01T' + t + ':00');
+    }
+
     function startRun() {
       clearInterval(timerInterval);
-      const estimate = parseInt(document.getElementById('estimate').value);
-      if (isNaN(estimate)) {
-        alert('Enter an Estimated Time (minutes) before starting the run.');
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+      if (!start || !end) {
+        alert('Enter Start and End times before starting the run.');
         return;
       }
+
+      const startTime = parseTimeToDate(start);
+      const endTime = parseTimeToDate(end);
+      const diffMs = endTime - startTime;
+      if (diffMs <= 0) {
+        alert('End Time must be after Start Time.');
+        return;
+      }
+
+      runEstimateMins = Math.floor(diffMs / 60000);
       runStart = new Date();
+
       timerInterval = setInterval(() => {
         const now = new Date();
-        const diffMs = now - runStart;
-        const diffMins = Math.floor(diffMs / 60000);
-        const remaining = estimate - diffMins;
+        const diffMins = Math.floor((now - runStart) / 60000);
+        const remaining = runEstimateMins - diffMins;
         const runner = document.getElementById('runner');
         runner.textContent = remaining >= 0
           ? 'Time Remaining: ' + remaining + 'm'
@@ -184,13 +146,14 @@
         return;
       }
 
-      const startTime = new Date('1970-01-01T' + start + ':00');
-      const endTime = new Date('1970-01-01T' + end + ':00');
+      const startTime = parseTimeToDate(start);
+      const endTime = parseTimeToDate(end);
       const diffMs = endTime - startTime;
-      if (diffMs < 0) {
+      if (diffMs <= 0) {
         alert('End Time must be after Start Time.');
         return;
       }
+
       const diffMins = diffMs / 60000;
       const hours = Math.floor(diffMins / 60);
       const minutes = Math.round(diffMins % 60);
@@ -206,8 +169,8 @@
       document.getElementById('mode').value = '';
       document.getElementById('start').value = '';
       document.getElementById('end').value = '';
-      document.getElementById('estimate').value = '';
       document.getElementById('runner').textContent = 'Time Remaining: 0m';
+      runEstimateMins = 0;
     }
 
     function renderRow(entry) {
@@ -267,7 +230,7 @@
           '<td id="totalTime">0h 0m</td>' +
         '</tr>';
       document.getElementById('runner').textContent = 'Time Remaining: 0m';
-      document.getElementById('estimate').value = '';
+      runEstimateMins = 0;
     }
   </script>
 </body>
