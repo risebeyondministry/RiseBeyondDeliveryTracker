@@ -2,67 +2,254 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Home - RiseBeyond Finance System</title>
-  <link rel="stylesheet" href="style.css">
+  <title>RiseBeyond Delivery Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: white;
+    }
+    h2 {
+      color: #0077cc;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #444;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #f4f4f4;
+      color: #0077cc;
+    }
+    .btn {
+      background: #FFD700;
+      color: #2c3e50;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background: #e6c200;
+    }
+    .btn-clear {
+      background: #888;
+      color: white;
+    }
+    .btn-clear:hover {
+      background: #555;
+    }
+    #runner {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #0077cc;
+      text-align: center;
+      font-size: 18px;
+    }
+    #totalRow {
+      font-weight: bold;
+      background: #f9f9f9;
+    }
+  </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <h2 style="text-align:center;" id="brandName"></h2>
-    <div style="text-align:center;" id="brandLogoContainer"></div>
-    <a href="index.html">Home</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="income-entry.html">Income Entry</a>
-    <a href="expenditure-entry.html">Expenditure Entry</a>
-    <a href="reports.html">Reports</a>
-    <a href="members.html">Members</a>
-    <a href="ministry-details.html">Ministry Details</a>
-    <a href="customization.html">Customization</a>
-    <a href="backup.html">Backup</a>
-  </div>
+  <h2>RiseBeyond Delivery Tracker</h2>
 
-  <!-- Main Content -->
-  <div class="main" style="text-align:center; padding:40px;">
-    <div id="headerLogo"></div>
-    <h1 id="welcomeHeader"></h1>
-    <p>Welcome to your personalized finance system. Use the Dashboard to manage income, expenditure, members, and reports.</p>
+  <label>Name:</label>
+  <input type="text" id="name" value="Rogicj">
 
-    <!-- Quick Links -->
-    <div style="margin-top:30px;">
-      <a href="dashboard.html" style="padding:10px 20px; background-color:green; color:white; text-decoration:none; border-radius:5px;">Go to Dashboard</a>
-      <a href="customization.html" style="padding:10px 20px; background-color:blue; color:white; text-decoration:none; border-radius:5px; margin-left:10px;">Customize System</a>
-    </div>
-  </div>
+  <label>Date:</label>
+  <input type="date" id="date">
 
-  <!-- Global Footer -->
-  <div id="sharedFooter"></div>
+  <label>Drop-off Place:</label>
+  <select id="place">
+    <option value="">-- Select Place --</option>
+    <option>Bank</option>
+    <option>Fed Ex</option>
+    <option>TPP</option>
+    <option>Ferry Dock</option>
+    <option>Port</option>
+    <option>Letter Drop</option>
+    <option>Bill Payments</option>
+    <option>Misc. Errands 1</option>
+    <option>Misc. Errands 2</option>
+    <option>Misc. Errands 3</option>
+    <option>Other</option>
+  </select>
+
+  <label>Travel Mode:</label>
+  <select id="mode">
+    <option value="">-- Select Mode --</option>
+    <option>Walking</option>
+    <option>Driving</option>
+  </select>
+
+  <label>Start Time:</label>
+  <input type="time" id="start">
+
+  <label>End Time:</label>
+  <input type="time" id="end">
+
+  <label>Estimated Time (minutes):</label>
+  <input type="number" id="estimate" placeholder="e.g. 20">
+
+  <div id="runner">Time Remaining: 0m</div>
+
+  <button class="btn" onclick="startRun()">Start Run</button>
+  <button class="btn" onclick="addEntry()">Add Entry</button>
+  <button class="btn btn-clear" onclick="clearLog()">Clear Log</button>
+
+  <table id="log">
+    <tr>
+      <th>Place</th>
+      <th>Mode</th>
+      <th>Start</th>
+      <th>End</th>
+      <th>Time Spent</th>
+    </tr>
+    <tr id="totalRow">
+      <td colspan="2">Total Walking</td>
+      <td colspan="2">Total Driving</td>
+      <td id="totalTime">0h 0m</td>
+    </tr>
+  </table>
 
   <script>
-    // Load global footer
-    fetch("footer.html")
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById("sharedFooter").innerHTML = data;
+    let timerInterval;
+    let runStart;
+    let deliveryLog = [];
+
+    window.onload = function() {
+      const saved = localStorage.getItem('deliveryLog');
+      if (saved) {
+        deliveryLog = JSON.parse(saved);
+        deliveryLog.forEach(entry => renderRow(entry));
+        updateTotals();
+      }
+    };
+
+    function startRun() {
+      clearInterval(timerInterval);
+      const estimate = parseInt(document.getElementById('estimate').value);
+      if (isNaN(estimate)) {
+        alert('Enter an Estimated Time (minutes) before starting the run.');
+        return;
+      }
+      runStart = new Date();
+      timerInterval = setInterval(() => {
+        const now = new Date();
+        const diffMs = now - runStart;
+        const diffMins = Math.floor(diffMs / 60000);
+        const remaining = estimate - diffMins;
+        const runner = document.getElementById('runner');
+        runner.textContent = remaining >= 0
+          ? `Time Remaining: ${remaining}m`
+          : `Over Time: ${Math.abs(remaining)}m`;
+      }, 1000);
+    }
+
+    function addEntry() {
+      clearInterval(timerInterval);
+      const place = document.getElementById('place').value;
+      const mode = document.getElementById('mode').value;
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+
+      if (!place || !mode || !start || !end) {
+        alert('Please fill in Place, Mode, Start, and End.');
+        return;
+      }
+
+      const startTime = new Date(`1970-01-01T${start}:00`);
+      const endTime = new Date(`1970-01-01T${end}:00`);
+      const diffMs = endTime - startTime;
+      if (diffMs < 0) {
+        alert('End Time must be after Start Time.');
+        return;
+      }
+      const diffMins = diffMs / 60000;
+      const hours = Math.floor(diffMins / 60);
+      const minutes = Math.round(diffMins % 60);
+
+      const entry = { place, mode, start, end, hours, minutes };
+      deliveryLog.push(entry);
+      localStorage.setItem('deliveryLog', JSON.stringify(deliveryLog));
+
+      renderRow(entry);
+      updateTotals();
+
+      document.getElementById('place').value = '';
+      document.getElementById('mode').value = '';
+      document.getElementById('start').value = '';
+      document.getElementById('end').value = '';
+      document.getElementById('estimate').value = '';
+      document.getElementById('runner').textContent = 'Time Remaining: 0m';
+    }
+
+    function renderRow(entry) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${entry.place}</td><td>${entry.mode}</td><td>${entry.start}</td><td>${entry.end}</td><td>${entry.hours}h ${entry.minutes}m</td>`;
+      const totalRow = document.getElementById('totalRow');
+      totalRow.parentNode.insertBefore(row, totalRow);
+    }
+
+    function updateTotals() {
+      let totalMinutes = 0, walkMinutes = 0, driveMinutes = 0;
+
+      deliveryLog.forEach(entry => {
+        const mins = entry.hours * 60 + entry.minutes;
+        totalMinutes += mins;
+        if (entry.mode === 'Walking') walkMinutes += mins;
+        if (entry.mode === 'Driving') driveMinutes += mins;
       });
 
-    // Branding
-    const ministryName = localStorage.getItem("ministryName") || "RiseBeyond Finance System";
-    const ministryLogo = localStorage.getItem("ministryLogo");
-    const savedTheme = localStorage.getItem("themeColor");
+      const totalHours = Math.floor(totalMinutes / 60);
+      const totalMins = totalMinutes % 60;
+      const walkHours = Math.floor(walkMinutes / 60);
+      const walkMins = walkMinutes % 60;
+      const driveHours = Math.floor(driveMinutes / 60);
+      const driveMins = driveMinutes % 60;
 
-    document.getElementById("brandName").innerText = ministryName;
-    document.getElementById("welcomeHeader").innerText = "Welcome, " + ministryName;
+      document.getElementById('totalRow').innerHTML = `
+        <td colspan="2">Walking: ${walkHours}h ${walkMins}m</td>
+        <td colspan="2">Driving: ${driveHours}h ${driveMins}m</td>
+        <td>Total: ${totalHours}h ${totalMins}m</td>
+      `;
+    }
 
-    if (ministryLogo) {
-      document.getElementById("brandLogoContainer").innerHTML =
-        `<img src="${ministryLogo}" alt="Ministry Logo" style="max-height:60px; margin-top:10px;">`;
-      document.getElementById("headerLogo").innerHTML =
-        `<img src="${ministryLogo}" alt="Ministry Logo" style="height:80px; margin-bottom:20px;">`;
-    }
-    if (savedTheme) {
-      document.getElementById("sidebar").style.backgroundColor = savedTheme;
-      document.querySelector(".main h1").style.color = savedTheme;
-    }
-  </script>
-</body>
-</html>
+    function clearLog() {
+      clearInterval(timerInterval);
+      deliveryLog = [];
+      localStorage.removeItem('deliveryLog');
+      document.getElementById('log').innerHTML = `
+        <tr>
+          <th>Place</th>
+          <th>Mode</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Time Spent</th>
+        </tr>
+        <tr id="totalRow">
+          <td colspan="2">Total Walking</td>
+          <td colspan="2">Total Driving</td>
+          <
