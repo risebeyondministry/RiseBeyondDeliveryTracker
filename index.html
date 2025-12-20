@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home - RiseBeyond Finance System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <h2 style="text-align:center;" id="brandName"></h2>
+    <div style="text-align:center;" id="brandLogoContainer"></div>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="income-entry.html">Income Entry</a>
+    <a href="expenditure-entry.html">Expenditure Entry</a>
+    <a href="reports.html">Reports</a>
+    <a href="members.html">Members</a>
+    <a href="ministry-details.html">Ministry Details</a>
+    <a href="customization.html">Customization</a>
+    <a href="backup.html">Backup</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main" style="text-align:center; padding:40px;">
+    <div id="headerLogo"></div>
+    <h1 id="welcomeHeader"></h1>
+    <p>Welcome to your personalized finance system. Use the Dashboard to manage income, expenditure, members, and reports.</p>
+
+    <!-- Quick Links -->
+    <div style="margin-top:30px;">
+      <a href="dashboard.html" style="padding:10px 20px; background-color:green; color:white; text-decoration:none; border-radius:5px;">Go to Dashboard</a>
+      <a href="customization.html" style="padding:10px 20px; background-color:blue; color:white; text-decoration:none; border-radius:5px; margin-left:10px;">Customize System</a>
+    </div>
+  </div>
+
+  <!-- Global Footer -->
+  <div id="sharedFooter"></div>
+
+  <script>
+    // Load global footer
+    fetch("footer.html")
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById("sharedFooter").innerHTML = data;
+      });
+
+    // Branding
+    const ministryName = localStorage.getItem("ministryName") || "RiseBeyond Finance System";
+    const ministryLogo = localStorage.getItem("ministryLogo");
+    const savedTheme = localStorage.getItem("themeColor");
+
+    document.getElementById("brandName").innerText = ministryName;
+    document.getElementById("welcomeHeader").innerText = "Welcome, " + ministryName;
+
+    if (ministryLogo) {
+      document.getElementById("brandLogoContainer").innerHTML =
+        `<img src="${ministryLogo}" alt="Ministry Logo" style="max-height:60px; margin-top:10px;">`;
+      document.getElementById("headerLogo").innerHTML =
+        `<img src="${ministryLogo}" alt="Ministry Logo" style="height:80px; margin-bottom:20px;">`;
+    }
+    if (savedTheme) {
+      document.getElementById("sidebar").style.backgroundColor = savedTheme;
+      document.querySelector(".main h1").style.color = savedTheme;
+    }
+  </script>
+</body>
+</html>
