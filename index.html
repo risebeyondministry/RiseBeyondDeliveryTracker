@@ -123,13 +123,20 @@ Tracker HTML
       runStart = new Date();
 
       timerInterval = setInterval(() => {
-        const now = new Date();
-        const diffMins = Math.floor((now - runStart) / 60000);
-        const remaining = runEstimateMins - diffMins;
-        document.getElementById('runner').textContent =
-          remaining >= 0 ? 'Time Remaining: ' + remaining + 'm'
-                         : 'Over Time: ' + Math.abs(remaining) + 'm';
-      }, 1000);
+  const now = new Date();
+  const diffMins = Math.floor((now - runStart) / 60000);
+  const remaining = runEstimateMins - diffMins;
+
+  document.getElementById('runner').textContent =
+    remaining >= 0 ? 'Time Remaining: ' + remaining + 'm'
+                   : 'Over Time: ' + Math.abs(remaining) + 'm';
+
+  // 🔔 Optional alerts
+  if (remaining === 0 && document.getElementById('soundToggle').checked) new Audio('ping.mp3').play();
+  if (remaining === 0 && document.getElementById('vibrateToggle').checked) navigator.vibrate(500);
+
+}, 1000);
+
     }
 
     function addEntry() {
@@ -240,6 +247,7 @@ Tracker HTML
 
 </body>
 </html>
+
 
 
 
