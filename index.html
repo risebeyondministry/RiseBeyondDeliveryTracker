@@ -65,6 +65,9 @@
 
   <div id="runner">Time Remaining: 0m</div>
 
+  <label><input type="checkbox" id="soundToggle"> Toggle Sound</label>
+<label><input type="checkbox" id="vibrateToggle"> Toggle Vibrate</label>
+
   <button class="btn" onclick="addEntry()">Add Entry</button>
   <button class="btn btn-clear" onclick="clearLog()">Clear Log</button>
 
@@ -122,7 +125,7 @@
       runEstimateMins = Math.floor(diffMs / 60000);
       runStart = new Date();
 
-      timerInterval = setInterval(() => {
+     timerInterval = setInterval(() => {
   const now = new Date();
   const diffMins = Math.floor((now - runStart) / 60000);
   const remaining = runEstimateMins - diffMins;
@@ -134,10 +137,9 @@
   // 🔔 Optional alerts
   if (remaining === 0 && document.getElementById('soundToggle').checked) new Audio('ping.mp3').play();
   if (remaining === 0 && document.getElementById('vibrateToggle').checked) navigator.vibrate(500);
-<label><input type="checkbox" id="soundToggle"> Toggle Sound</label>
-<label><input type="checkbox" id="vibrateToggle"> Toggle Vibrate</label>
 
 }, 1000);
+
 
     }
 
@@ -249,6 +251,7 @@
 
 </body>
 </html>
+
 
 
 
