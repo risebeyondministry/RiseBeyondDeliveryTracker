@@ -134,6 +134,8 @@
   // 🔔 Optional alerts
   if (remaining === 0 && document.getElementById('soundToggle').checked) new Audio('ping.mp3').play();
   if (remaining === 0 && document.getElementById('vibrateToggle').checked) navigator.vibrate(500);
+<label><input type="checkbox" id="soundToggle"> Toggle Sound</label>
+<label><input type="checkbox" id="vibrateToggle"> Toggle Vibrate</label>
 
 }, 1000);
 
@@ -247,6 +249,7 @@
 
 </body>
 </html>
+
 
 
 
