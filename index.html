@@ -135,7 +135,10 @@
                    : 'Over Time: ' + Math.abs(remaining) + 'm';
 
   // 🔔 Optional alerts
-  if (remaining === 0 && document.getElementById('soundToggle').checked) new Audio('ping.mp3').play();
+  if (remaining === 0 && document.getElementById('soundToggle').checked) {
+  document.getElementById('pingSound').play();
+}
+
   if (remaining === 0 && document.getElementById('vibrateToggle').checked) navigator.vibrate(500);
 
 }, 1000);
@@ -244,13 +247,16 @@
       document.getElementById('runner').textContent = 'Time Remaining: 0m';
       runEstimateMins = 0;
     }
+    
   </script>
 <footer style="margin-top:40px; text-align:center; font-size:14px; color:#777;">
   Romans 12:11 — “Never be lacking in zeal, but keep your spiritual fervor, serving the Lord.”
 </footer>
+<audio id="pingSound" src="ping.mp3" preload="auto"></audio>
 
 </body>
 </html>
+
 
 
 
